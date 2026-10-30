@@ -29,14 +29,17 @@ function is_installed(): bool {
 
 // Database configuration loading
 $dbConfigFile = __DIR__ . '/db_config.php';
-$loadedDbConfig = file_exists($dbConfigFile) ? require $dbConfigFile : [];
+$loadedDbConfig = (file_exists($dbConfigFile) && is_readable($dbConfigFile)) ? (require $dbConfigFile) : [];
+if (!is_array($loadedDbConfig)) {
+    $loadedDbConfig = [];
+}
 
-if (!defined('DB_HOST')) define('DB_HOST', $loadedDbConfig['host'] ?? (getenv('DB_HOST') ?: '127.0.0.1'));
-if (!defined('DB_PORT')) define('DB_PORT', $loadedDbConfig['port'] ?? (getenv('DB_PORT') ?: '3306'));
-if (!defined('DB_NAME')) define('DB_NAME', $loadedDbConfig['database'] ?? (getenv('DB_NAME') ?: 'na_coconuts'));
-if (!defined('DB_USER')) define('DB_USER', $loadedDbConfig['username'] ?? (getenv('DB_USER') ?: 'na_user'));
-if (!defined('DB_PASS')) define('DB_PASS', $loadedDbConfig['password'] ?? (getenv('DB_PASS') ?: 'na_pass123'));
-if (!defined('DB_PREFIX')) define('DB_PREFIX', $loadedDbConfig['prefix'] ?? '');
+if (!defined('DB_HOST')) define('DB_HOST', !empty($loadedDbConfig['host']) ? (string)$loadedDbConfig['host'] : (getenv('DB_HOST') ?: '127.0.0.1'));
+if (!defined('DB_PORT')) define('DB_PORT', !empty($loadedDbConfig['port']) ? (string)$loadedDbConfig['port'] : (getenv('DB_PORT') ?: '3306'));
+if (!defined('DB_NAME')) define('DB_NAME', !empty($loadedDbConfig['database']) ? (string)$loadedDbConfig['database'] : (getenv('DB_NAME') ?: 'na_coconuts'));
+if (!defined('DB_USER')) define('DB_USER', !empty($loadedDbConfig['username']) ? (string)$loadedDbConfig['username'] : (getenv('DB_USER') ?: 'na_user'));
+if (!defined('DB_PASS')) define('DB_PASS', isset($loadedDbConfig['password']) ? (string)$loadedDbConfig['password'] : (getenv('DB_PASS') ?: 'na_pass123'));
+if (!defined('DB_PREFIX')) define('DB_PREFIX', (string)($loadedDbConfig['prefix'] ?? ''));
 
 // Security settings
 define('SESSION_LIFETIME', 86400 * 7); // 7 days

@@ -19,6 +19,18 @@ ob_start();
     </div>
     <?php endif; ?>
 
+    <?php if (!empty($adminCount) && $adminCount > 0): ?>
+    <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-xs text-emerald-800 space-y-2">
+        <div class="flex items-center gap-2 font-bold text-sm">
+            <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>
+            Existing Administrator Account Detected
+        </div>
+        <p class="text-[11px] leading-relaxed">
+            The database already has a configured administrator account. You can retain your existing login without entering passwords, or update it using the form below.
+        </p>
+    </div>
+    <?php endif; ?>
+
     <form action="/install?step=4" method="POST" class="space-y-4 text-xs">
         <input type="hidden" name="<?= CSRF_TOKEN_KEY ?>" value="<?= csrf_token() ?>">
 
@@ -87,15 +99,23 @@ ob_start();
             Passwords are encrypted using PHP <code class="font-mono font-bold text-gray-700">password_hash()</code> with bcrypt and stored safely in MySQL.
         </div>
 
-        <div class="pt-4 border-t border-gray-100 flex justify-between items-center">
+        <div class="pt-4 border-t border-gray-100 flex flex-wrap justify-between items-center gap-3">
             <a href="/install?step=3" class="text-xs font-semibold text-gray-500 hover:text-gray-700">
                 &larr; Back
             </a>
 
-            <button type="submit" class="bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs py-3 px-6 rounded-xl shadow-xs transition flex items-center gap-2">
-                <span>Save Admin & Continue</span>
-                &rarr;
-            </button>
+            <div class="flex items-center gap-2">
+                <?php if (!empty($adminCount) && $adminCount > 0): ?>
+                <button type="submit" name="keep_existing_admin" value="1" formnovalidate class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs py-3 px-5 rounded-xl transition">
+                    Keep Existing Account &rarr;
+                </button>
+                <?php endif; ?>
+
+                <button type="submit" class="bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs py-3 px-6 rounded-xl shadow-xs transition flex items-center gap-2">
+                    <span>Save Admin & Continue</span>
+                    &rarr;
+                </button>
+            </div>
         </div>
     </form>
 </div>

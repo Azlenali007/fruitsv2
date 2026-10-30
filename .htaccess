@@ -2,9 +2,8 @@
     RewriteEngine On
     RewriteBase /
 
-    # Ensure /install and /install/ route immediately to installer
-    RewriteRule ^install/?$ install/index.php [L,QSA]
-    RewriteRule ^install/(.*)$ install/index.php [L,QSA]
+    # Ensure /install and /install/* route to public front controller
+    RewriteRule ^install(/.*)?$ public/index.php [L,QSA]
 
     # Serve existing files and directories directly
     RewriteCond %{REQUEST_FILENAME} -f [OR]

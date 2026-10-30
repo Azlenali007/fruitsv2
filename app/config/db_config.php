@@ -1,6 +1,6 @@
 <?php
 /**
- * Database Connection Configuration
+ * Database Configuration - Saved by Web Installer
  * N.A Fresh Fruits & Coconuts
  */
 return [

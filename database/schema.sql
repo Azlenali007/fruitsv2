@@ -59,13 +59,18 @@ CREATE TABLE IF NOT EXISTS `customers` (
     `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     `name` VARCHAR(100) NOT NULL,
     `phone` VARCHAR(20) NOT NULL,
+    `email` VARCHAR(100) NULL,
+    `password_hash` VARCHAR(255) NULL,
     `address` TEXT NULL,
     `city` VARCHAR(80) NULL,
     `state` VARCHAR(80) NULL,
     `pincode` VARCHAR(10) NULL,
+    `status` VARCHAR(20) NOT NULL DEFAULT 'active',
+    `last_login_at` DATETIME NULL,
     `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX `idx_phone` (`phone`)
+    INDEX `idx_phone` (`phone`),
+    INDEX `idx_email` (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 6. Orders Table
@@ -133,3 +138,15 @@ CREATE TABLE IF NOT EXISTS `otp_verifications` (
     `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     INDEX `idx_phone_expiry` (`phone`, `expires_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 10. Customer Login Attempts Table (Security Throttling)
+CREATE TABLE IF NOT EXISTS `customer_login_attempts` (
+    `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `identifier` VARCHAR(100) NOT NULL,
+    `ip_address` VARCHAR(45) NOT NULL,
+    `attempted_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `success` TINYINT(1) NOT NULL DEFAULT 0,
+    INDEX `idx_ident_time` (`identifier`, `attempted_at`),
+    INDEX `idx_ip_time` (`ip_address`, `attempted_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+

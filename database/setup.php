@@ -181,6 +181,16 @@ try {
         echo "Reference order #NA1024 seeded successfully.\n";
     }
 
+    // Record installation lock file
+    $lockData = json_encode([
+        'installed_at' => date('Y-m-d H:i:s'),
+        'version' => '1.0.0',
+        'source' => 'setup.php',
+        'verified' => true
+    ], JSON_PRETTY_PRINT);
+    @mkdir(__DIR__ . '/../storage', 0755, true);
+    @file_put_contents(INSTALL_LOCK_FILE, $lockData);
+
     echo "Database setup and seeding completed successfully.\n";
 } catch (Exception $e) {
     echo "Database Setup Error: " . $e->getMessage() . "\n";

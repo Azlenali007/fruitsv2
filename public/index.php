@@ -32,13 +32,19 @@ if ($uri === '/install' || str_starts_with($uri, '/install/')) {
 }
 
 // ----------------------------------------------------
-// 2. INSTALLATION STATE CHECKING (STATES A, B, C, D)
+// 2. INSTALLATION STATE CHECKING
 // ----------------------------------------------------
 if (!is_installed()) {
-    // If DB is already configured and tables exist, verify and lock safely
-    if (Database::isReady()) {
+    // If DB is already configured and populated, self-heal the lock file
+    if (Database::isConfiguredAndPopulated()) {
+        $storageDir = dirname(INSTALL_LOCK_FILE);
+        if (!is_dir($storageDir)) {
+            @mkdir($storageDir, 0755, true);
+        }
         @file_put_contents(INSTALL_LOCK_FILE, json_encode([
             'installed_at' => date('Y-m-d H:i:s'),
+            'version' => '1.0.0',
+            'status' => 'auto_recovered',
             'verified' => true
         ], JSON_PRETTY_PRINT));
     } else {
@@ -49,7 +55,7 @@ if (!is_installed()) {
 }
 
 // ----------------------------------------------------
-// 3. MAIN APPLICATION ROUTING PROTECTED BY STATE D
+// 3. MAIN APPLICATION ROUTING
 // ----------------------------------------------------
 try {
     switch ($uri) {
@@ -62,9 +68,27 @@ try {
         case '/index.php':
             $product = Product::getPrimary();
             if (!$product) {
-                // If product is missing, direct safely to installer or create
-                header('Location: /install?step=3');
-                exit;
+                // If product is missing, self-seed default product if database tables exist
+                try {
+                    $pdo = Database::getConnection();
+                    $stmtProd = $pdo->prepare("
+                        INSERT INTO `products` (`name`, `slug`, `tagline`, `description`, `price`, `stock_quantity`, `is_available`, `image_url`)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    ");
+                    $stmtProd->execute([
+                        'Fresh Coconut Water',
+                        'fresh-coconut-water',
+                        'Pure • Natural • Healthy',
+                        'Fresh tender coconut water, straight from nature. No added sugar, no preservatives, no chemicals.',
+                        40.00,
+                        150,
+                        1,
+                        '/assets/images/product-main.png'
+                    ]);
+                    $product = Product::getPrimary();
+                } catch (Exception $e) {
+                    // non-blocking
+                }
             }
             require __DIR__ . '/../app/views/home.php';
             break;
@@ -541,12 +565,18 @@ try {
                 The store could not establish a connection to MySQL database. Please verify your MySQL server status or re-configure credentials.
             </p>
             <div class="pt-2 flex flex-col gap-2">
-                <a href="/install?step=2" class="bg-[#235d3a] text-white text-xs font-bold py-2.5 px-4 rounded-xl hover:bg-[#1b4a2e] transition">
-                    Run Web Installer / Configure Database
-                </a>
-                <button onclick="window.location.reload()" class="bg-gray-100 text-gray-700 text-xs font-semibold py-2.5 px-4 rounded-xl hover:bg-gray-200 transition">
+                <button onclick="window.location.reload()" class="bg-[#235d3a] text-white text-xs font-bold py-2.5 px-4 rounded-xl hover:bg-[#1b4a2e] transition shadow-xs">
                     Retry Connection
                 </button>
+                <?php if (is_installed() && AuthService::check()): ?>
+                <a href="/install?admin_repair=1" class="bg-emerald-50 text-emerald-800 text-xs font-semibold py-2.5 px-4 rounded-xl border border-emerald-200 hover:bg-emerald-100 transition">
+                    Run Administrator Database Diagnostics
+                </a>
+                <?php elseif (!is_installed()): ?>
+                <a href="/install?step=1" class="bg-gray-100 text-gray-700 text-xs font-semibold py-2.5 px-4 rounded-xl hover:bg-gray-200 transition">
+                    Run Web Installation Wizard
+                </a>
+                <?php endif; ?>
             </div>
         </div>
     </body>

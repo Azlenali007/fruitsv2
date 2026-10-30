@@ -86,6 +86,77 @@ curl_close($chInst);
 
 it("Installer route renders locked screen when locked", str_contains($instHtml, 'Installer is Locked'));
 
+// ---------------------------------------------------------
+// 5. INPUT VALIDATION TESTS
+// ---------------------------------------------------------
+echo "\n5. DATABASE INPUT VALIDATION TESTS:\n";
+$emptyHost = Database::testConnection('', '3306', 'na_coconuts', 'na_user', 'na_pass123');
+it("Empty database host is rejected", $emptyHost['success'] === false);
+
+$badPort = Database::testConnection('127.0.0.1', '99999', 'na_coconuts', 'na_user', 'na_pass123');
+it("Invalid port (>65535) is rejected", $badPort['success'] === false);
+
+$emptyDb = Database::testConnection('127.0.0.1', '3306', '', 'na_user', 'na_pass123');
+it("Empty database name is rejected", $emptyDb['success'] === false);
+
+$emptyUser = Database::testConnection('127.0.0.1', '3306', 'na_coconuts', '', 'na_pass123');
+it("Empty database username is rejected", $emptyUser['success'] === false);
+
+// ---------------------------------------------------------
+// 6. SAFE DATABASE CONFIGURATION SAVING TESTS
+// ---------------------------------------------------------
+echo "\n6. CONFIGURATION SAVING TESTS:\n";
+$saveRes = Database::saveConfiguration(DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASS, '');
+it("Database::saveConfiguration saves and verifies db_config.php", $saveRes['success'] === true);
+
+$readBack = require __DIR__ . '/../app/config/db_config.php';
+it("Saved db_config.php is readable array", is_array($readBack) && ($readBack['database'] ?? '') === DB_NAME);
+
+// ---------------------------------------------------------
+// 7. MULTI-SESSION PERSISTENCE & SELF-HEALING TESTS
+// ---------------------------------------------------------
+echo "\n7. PERSISTENCE & SELF-HEALING TESTS:\n";
+// Simulate lock file being deleted on a populated database
+@unlink($lockFile);
+$chAuto = curl_init('http://127.0.0.1:3000/');
+curl_setopt($chAuto, CURLOPT_RETURNTRANSFER, true);
+$autoHtml = curl_exec($chAuto);
+$autoCode = curl_getinfo($chAuto, CURLINFO_HTTP_CODE);
+curl_close($chAuto);
+
+it("When lock file missing on populated DB, / self-heals and returns HTTP 200", $autoCode === 200);
+it("Self-healed lock file was recreated", file_exists($lockFile));
+
+// Repeated visits test
+$allRepeatedOk = true;
+for ($r = 0; $r < 5; $r++) {
+    $chRep = curl_init('http://127.0.0.1:3000/');
+    curl_setopt($chRep, CURLOPT_RETURNTRANSFER, true);
+    curl_exec($chRep);
+    if (curl_getinfo($chRep, CURLINFO_HTTP_CODE) !== 200) {
+        $allRepeatedOk = false;
+    }
+    curl_close($chRep);
+}
+it("5 repeated visits all return HTTP 200 without redirecting to installer", $allRepeatedOk);
+
+// Customer and Admin pages work after installation
+$routesToTest = [
+    '/shop' => 200,
+    '/cart' => 200,
+    '/login' => 200,
+    '/register' => 200,
+    '/admin/login' => 200
+];
+foreach ($routesToTest as $rPath => $expectedStatus) {
+    $chRoute = curl_init('http://127.0.0.1:3000' . $rPath);
+    curl_setopt($chRoute, CURLOPT_RETURNTRANSFER, true);
+    curl_exec($chRoute);
+    $rCode = curl_getinfo($chRoute, CURLINFO_HTTP_CODE);
+    curl_close($chRoute);
+    it("Route {$rPath} returns HTTP {$expectedStatus} normally", $rCode === $expectedStatus);
+}
+
 echo "\n========================================================\n";
 echo "INSTALLER TESTS SUMMARY: {$passCount} PASSED, {$failCount} FAILED\n";
 echo "========================================================\n";
