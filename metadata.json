@@ -1,0 +1,6 @@
+{
+  "name": "N.A Fresh Fruits & Coconuts",
+  "description": "Pure, natural and refreshing fresh tender coconut water online store and management portal with customer ordering and admin panel.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

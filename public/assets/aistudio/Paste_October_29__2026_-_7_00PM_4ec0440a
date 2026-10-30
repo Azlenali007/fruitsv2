@@ -1,0 +1,1006 @@
+MASTER PROMPT — N.A FRESH FRUITS & COCONUTS
+
+Complete PHP 8.2+ and MySQL Website, Customer Store, Admin Panel, Responsive UI, and Strict File Restrictions
+
+You are a senior PHP developer, database architect, UI/UX engineer, security engineer, and software tester.
+
+Your task is to build a complete, production-oriented website for N.A Fresh Fruits & Coconuts, a fresh coconut water business.
+
+This is a complete website development task, not merely a UI mockup, a landing page, a prototype, or a collection of disconnected frontend pages.
+
+The final website must have:
+
+* A complete customer-facing shopping website.
+* A fully functional, secure admin panel.
+* A MySQL database.
+* A working shopping cart and checkout.
+* Persistent order storage and order tracking.
+* Product, inventory, delivery, and sales management.
+* A premium responsive UI matching the uploaded reference image as closely as possible.
+* Secure PHP backend logic.
+* Complete setup, installation, and deployment instructions.
+
+Follow every requirement below. Do not silently skip requirements, substitute a different technology stack, or create unrelated features.
+
+SECTION 1 — ABSOLUTE TECHNOLOGY AND FILE RULES
+
+These rules are mandatory and take priority over any default behavior of your coding environment.
+
+1.1 Backend and application language
+
+Use PHP 8.2 or newer for all server-side application logic.
+
+Use PHP for:
+
+* Page rendering.
+* Request handling.
+* Form processing.
+* Authentication.
+* Session management.
+* Business logic.
+* Cart processing.
+* Checkout.
+* Order creation and tracking.
+* Product management.
+* Stock management.
+* Admin functions.
+* Delivery settings.
+* Sales reports.
+* Database queries.
+* Validation.
+* Authorization.
+* Server-side calculations.
+
+The project must use a straightforward, maintainable PHP architecture.
+
+Do not use Laravel, Symfony, CodeIgniter, WordPress, or another PHP application framework.
+
+1.2 Database
+
+Use MySQL only.
+
+Use PDO with prepared statements for all database operations.
+
+Do not use:
+
+* SQLite.
+* PostgreSQL.
+* MongoDB.
+* JSON files as a substitute for the primary database.
+* Browser local storage as the permanent database.
+* An in-memory database for production functionality.
+
+Create the necessary MySQL schema, relationships, indexes, constraints, and setup/import SQL file.
+
+All products, prices, inventory, customer orders, settings, and persistent business data must be stored in MySQL.
+
+1.3 Frontend technologies
+
+Use only these permitted frontend technologies:
+
+* PHP-rendered HTML.
+* Tailwind CSS.
+* Alpine.js.
+* Chart.js for admin charts.
+* SVG icons.
+* Standard browser JavaScript where necessary.
+
+Tailwind CSS must be used for styling. Alpine.js may handle simple interactive UI behavior, such as quantity controls, menus, and conditional form fields. Chart.js is for reports and charts.
+
+Do not use React, Vue, Next.js, Angular, Svelte, TypeScript, or another frontend application framework.
+
+Do not use Bootstrap.
+
+Do not create a separate Node.js backend or another server-side runtime.
+
+1.4 CRITICAL: ZERO .ts AND .tsx FILES
+
+The project must contain zero .ts files and zero .tsx files. This is a strict, non-negotiable requirement.
+
+Examples of forbidden files include, but are not limited to:
+
+* app.ts
+* main.ts
+* index.ts
+* config.ts
+* vite.config.ts
+* next.config.ts
+* tailwind.config.ts
+* postcss.config.ts
+* eslint.config.ts
+* global.d.ts
+* types.ts
+* helpers.ts
+* utils.ts
+* App.tsx
+* index.tsx
+* main.tsx
+* page.tsx
+* layout.tsx
+* component.tsx
+* Button.tsx
+* Any other file ending in .ts or .tsx.
+
+Do not generate these files, even temporarily, as part of the project implementation.
+
+Do not generate TypeScript interfaces, TypeScript types, TSX components, TypeScript configuration, or TypeScript-based build tooling.
+
+Do not convert the project into a React, Vite-TypeScript, Next.js, or TSX-based application.
+
+Mandatory prevention procedure
+
+Before writing any code:
+
+1. Confirm that the implementation plan uses PHP, MySQL, Tailwind CSS, Alpine.js, Chart.js, SVG, and standard JavaScript only.
+2. Do not use a starter template that automatically generates .ts or .tsx files.
+3. Do not use a TypeScript-oriented project scaffold.
+4. If a CSS build configuration is required, use an allowed JavaScript configuration file or a suitable CSS configuration supported by the selected tooling.
+5. Prefer a simple PHP project structure that does not require an unnecessary JavaScript build system.
+6. Ensure that all required customer and admin pages are rendered by PHP.
+
+Mandatory cleanup procedure if a forbidden file is created
+
+If any tool, code generator, AI assistant, dependency, starter template, or accidental operation creates a .ts or .tsx file:
+
+1. Stop and identify every forbidden file.
+2. Search the entire project, including nested directories and hidden project directories, for filenames ending in .ts or .tsx.
+3. Delete every forbidden project-source or configuration file.
+4. Replace any necessary functionality with PHP, ordinary JavaScript (.js), CSS, SVG, or SQL.
+5. Remove references to the deleted files from imports, scripts, configuration, build commands, and documentation.
+6. Verify that the application still works without those files.
+7. Search the project again after cleanup.
+
+Do not merely rename a TypeScript file while leaving TypeScript syntax in it. Rewrite the code into valid JavaScript or PHP as appropriate.
+
+Do not preserve forbidden files in unused directories, backups, alternate source folders, or generated project files.
+
+Do not delete operating-system files or unrelated external environment files. The zero-file requirement applies to the project being developed and delivered.
+
+Final file audit
+
+Before declaring the project complete, execute an actual recursive file search using the available terminal or filesystem tools. Check case-insensitive .ts and .tsx extensions.
+
+The final audit must confirm:
+
+* .ts file count: 0
+* .tsx file count: 0
+
+If any forbidden file remains, the task is not complete. Remove it, fix any dependencies, and rerun the audit.
+
+Do not claim that the audit passed unless it has actually been performed.
+
+1.5 Permitted file extensions
+
+Use file types such as:
+
+* .php
+* .js
+* .css
+* .svg
+* .sql
+* .json only when genuinely required for permitted configuration or data.
+* .md for documentation.
+* .webp, .jpg, .jpeg, and .png for appropriate image assets.
+* .htaccess when using Apache-specific configuration.
+* Other ordinary, necessary non-TypeScript files only when justified.
+
+The presence of a file extension in this list does not authorize adding another framework or backend.
+
+SECTION 2 — BUSINESS REQUIREMENTS
+
+Business name: N.A Fresh Fruits & Coconuts
+
+Business type: Fresh coconut water shop.
+
+The website currently sells fresh coconut water only.
+
+Do not add:
+
+* Fruit juice products.
+* Packaged drinks.
+* Ice cream.
+* Coconut malai bars.
+* Other fruits.
+* Unrelated products.
+* Unrequested subscription plans.
+* Unrequested membership systems.
+* Unrequested loyalty points.
+* Unrequested complex ecommerce features.
+
+Keep the customer experience simple, premium, fast, and easy to understand.
+
+All prices, delivery charges, minimum order amounts, availability, stock quantities, and business settings must be configurable from the admin panel and stored in MySQL.
+
+Do not invent a final selling price or delivery charge. Use an editable initial configuration that the administrator can change.
+
+SECTION 3 — REFERENCE IMAGE: EXACT UI MATCHING
+
+The uploaded reference image is the primary visual authority for the website.
+
+Reproduce the uploaded image as closely as possible. Do not create a different design inspired by it.
+
+Before implementation, inspect the reference image and identify:
+
+* Page structure.
+* Main layout.
+* Green and white color palette.
+* Background colors.
+* Product image placement.
+* Typography.
+* Font sizes and weights.
+* Heading alignment.
+* Spacing and padding.
+* Container widths.
+* Border radii.
+* Shadows.
+* Button shapes.
+* Button colors.
+* Product cards.
+* Quantity controls.
+* Cart summary.
+* Checkout layout.
+* Icons.
+* Desktop navigation.
+* Mobile navigation.
+* Fixed-bottom navigation.
+* Responsive behavior.
+* Any visible order confirmation screen.
+
+Reference-matching requirements
+
+1. Match the original color palette as closely as possible.
+2. Match the original arrangement of content.
+3. Use the same visual hierarchy and alignment.
+4. Reproduce the product card and quantity selector design.
+5. Reproduce the cart and checkout styling.
+6. Reproduce the order confirmation styling.
+7. Reproduce the mobile bottom navigation.
+8. Use suitable coconut water imagery with a similar composition to the reference.
+9. Do not add unrelated sections just to make the website appear larger.
+10. Do not change the brand’s visual identity without authorization.
+
+If the uploaded image shows mobile and desktop designs, reproduce both.
+
+If a detail is not visible, make a restrained design decision consistent with the reference rather than redesigning the entire page.
+
+Visual verification
+
+After implementing the UI:
+
+* Capture screenshots at comparable mobile and desktop viewport sizes.
+* Compare the screenshots against the uploaded reference.
+* Identify differences in layout, spacing, colors, typography, image proportions, and navigation.
+* Correct the differences.
+* Repeat until the result is as close as reasonably achievable.
+
+Do not declare the UI complete solely because the pages render or the buttons work.
+
+Do not replace the reference design with a generic ecommerce template.
+
+SECTION 4 — CUSTOMER-FACING WEBSITE
+
+Build the following functional pages.
+
+4.1 Home page
+
+Include:
+
+* Brand name: N.A Fresh Fruits & Coconuts.
+* Logo or brand area consistent with the reference.
+* Main coconut water product image.
+* Short, clear product description.
+* Current price from MySQL.
+* Stock/availability information.
+* Prominent Order Now or Shop Now button.
+* Product information consistent with the approved design.
+* Customer navigation.
+
+Do not display fabricated testimonials, fake reviews, false discounts, or unsupported claims.
+
+4.2 Shop and product page
+
+Display the fresh coconut water product.
+
+Include:
+
+* Product image.
+* Product name.
+* Product description.
+* Current price.
+* Stock status.
+* Quantity decrease button.
+* Quantity increase button.
+* Add to Cart button.
+
+Requirements:
+
+* The quantity cannot be less than one when adding an item.
+* Prevent quantities above available stock.
+* Show a clear out-of-stock state.
+* Do not permit adding an unavailable product.
+* Product price and availability must be fetched from MySQL.
+* Product image and description must be manageable by the admin.
+
+Even if only one product is initially available, design the database so that the shop can manage its product records without adding unrelated product categories.
+
+4.3 Shopping cart
+
+Include:
+
+* Product image.
+* Product name.
+* Current order quantity.
+* Quantity controls.
+* Remove item option.
+* Item subtotal.
+* Cart subtotal.
+* Delivery charge when applicable.
+* Final payable amount.
+* Proceed to Checkout button.
+
+Requirements:
+
+* Recalculate the displayed amount when quantity changes.
+* Validate quantity and stock on the server.
+* Revalidate the product price during checkout.
+* Do not trust browser-submitted totals.
+* Preserve the cart appropriately during navigation and session use.
+* Provide a useful empty-cart state.
+
+A session may be used for temporary cart state, but the confirmed order must be stored in MySQL.
+
+4.4 Checkout
+
+Provide the following fields:
+
+* Customer name.
+* Indian mobile number.
+* Fulfilment method.
+* Delivery address if local delivery is selected.
+* Payment method.
+* Order summary.
+* Applicable delivery charge.
+* Final total.
+* Confirm Order button.
+
+Fulfilment methods
+
+Support:
+
+* Local Delivery.
+* Shop Pickup.
+
+The admin must be able to enable or disable these methods.
+
+If Shop Pickup is selected:
+
+* Do not require a delivery address.
+* Do not charge a delivery fee unless a specific configured business rule requires it.
+
+If Local Delivery is selected:
+
+* Require a valid delivery address.
+* Check that delivery is enabled.
+* Check the configured delivery-area restrictions when implemented.
+* Apply the configured delivery charge.
+* Apply the configured minimum order amount.
+
+Payment methods
+
+Implement cash on delivery or cash at pickup only where appropriate to the enabled fulfilment methods.
+
+Online payments may be offered only if a real gateway is configured and its payment flow is implemented securely.
+
+Do not fabricate successful online payments. Do not mark a payment paid merely because the customer clicks Confirm Order.
+
+4.5 Order creation
+
+When a customer confirms an order:
+
+1. Validate all fields on the server.
+2. Load the product and its current price from MySQL.
+3. Check stock and availability.
+4. Validate the fulfilment method.
+5. Validate delivery settings and applicable charges.
+6. Recalculate the subtotal and final total on the server.
+7. Begin a database transaction.
+8. Lock or safely recheck the relevant stock records.
+9. Create the order and order-item snapshot.
+10. Update stock atomically if the business uses stock deduction at order placement.
+11. Commit the transaction.
+12. Display the confirmation page.
+
+If any operation fails, roll back the transaction and display an appropriate message.
+
+Prevent duplicate orders caused by double-clicking, retries, or refreshing the confirmation page. Use a suitable server-side idempotency mechanism or equivalent reliable approach.
+
+Make the stock-deduction policy explicit and consistent with the order-cancellation policy.
+
+4.6 Order confirmation
+
+After successful order creation, display:
+
+* Unique order number.
+* Order date.
+* Product name.
+* Quantity.
+* Unit price.
+* Subtotal.
+* Delivery charge.
+* Final total.
+* Fulfilment method.
+* Payment method and payment status.
+* Current order status.
+* Relevant next steps.
+
+Do not expose internal database IDs or private customer information through guessable public URLs.
+
+4.7 My Orders and order tracking
+
+Customers must be able to view the status of their orders.
+
+Support:
+
+* Pending.
+* Confirmed.
+* Delivered.
+* Cancelled.
+
+Provide a secure order lookup mechanism suitable for guest customers. This may use OTP verification or another properly secured access mechanism.
+
+If OTP is implemented:
+
+* Generate codes securely.
+* Store verification data safely.
+* Apply expiry limits.
+* Apply attempt limits and rate limiting.
+* Do not reveal whether a phone number has an account or order.
+* Use a real SMS provider only if configured.
+* Do not pretend an SMS has been sent when no provider exists.
+
+Never expose an order using a predictable order ID alone.
+
+Show only the information the verified customer is authorized to see.
+
+4.8 Customer-side error and empty states
+
+Design useful states for:
+
+* Empty cart.
+* Out-of-stock product.
+* Invalid form fields.
+* Failed checkout.
+* Network/database error.
+* Invalid order lookup.
+* Order not found.
+* Disabled delivery method.
+* Disabled pickup method.
+* Unavailable product.
+
+Keep all these states visually consistent with the reference image.
+
+SECTION 5 — FIXED MOBILE BOTTOM NAVIGATION
+
+This is a critical requirement.
+
+On mobile devices, implement the bottom navigation shown in the uploaded reference image.
+
+Required items:
+
+* Home.
+* Shop.
+* Cart.
+* My Orders.
+
+Requirements:
+
+1. Use CSS fixed positioning relative to the viewport.
+2. Keep the navigation visible while the user scrolls.
+3. Do not position it as an ordinary footer.
+4. Do not render it only at the bottom of the document.
+5. Do not hide it when the user scrolls.
+6. Preserve the reference image’s icon and label arrangement.
+7. Highlight the active destination.
+8. Display a cart count where appropriate.
+9. Respect mobile safe-area insets.
+10. Add enough bottom padding to prevent page content from being hidden behind the navigation.
+11. Ensure forms, checkout controls, dialogs, and buttons remain accessible.
+12. Test on narrow mobile screens and common smartphone viewport sizes.
+
+On desktop, follow the navigation arrangement shown in the reference image and maintain appropriate usability.
+
+SECTION 6 — ADMIN PANEL
+
+Create a separate, protected admin area.
+
+All admin operations must use PHP server-side authorization and MySQL persistence.
+
+6.1 Admin authentication
+
+Implement:
+
+* Admin login.
+* Secure logout.
+* Password change.
+* Session regeneration after login.
+* Password hashing using password_hash().
+* Password verification using password_verify().
+* Login attempt throttling.
+* CSRF protection.
+* Secure cookie settings.
+* Authorization checks on every protected admin request.
+
+Do not create an unrestricted public admin-registration page.
+
+Provide a safe initial admin creation or setup process. Do not hardcode a production password in source code or commit credentials.
+
+6.2 Admin dashboard
+
+Display actual database-backed statistics:
+
+* Orders today.
+* Pending orders.
+* Confirmed orders.
+* Delivered orders.
+* Cancelled orders.
+* Sales today.
+* Low-stock products.
+* Relevant order and sales trends.
+
+Use Chart.js for suitable charts.
+
+Calculate the figures from database records and define what counts as a sale. Do not count cancelled or unpaid online orders as completed revenue without an explicit business rule.
+
+Do not fabricate chart data.
+
+6.3 Order management
+
+Admin must be able to:
+
+* View all orders.
+* Search and filter orders.
+* Filter by date and status.
+* View order number.
+* View customer name and contact details.
+* View delivery or pickup method.
+* View delivery address where applicable.
+* View product, quantity, and price snapshots.
+* View payment method and payment status.
+* Change order status.
+* Cancel an order.
+* Review order history.
+
+Use server-side validation and authorization for every status update.
+
+Record status changes with timestamps and the responsible administrator where applicable.
+
+Handle stock restoration consistently when an order is cancelled. Prevent double-restoration if cancellation is repeated.
+
+Do not allow arbitrary invalid order-status transitions.
+
+6.4 Product management
+
+Admin must be able to:
+
+* Add or edit a product.
+* Change the product name.
+* Change the description.
+* Change the selling price.
+* Update stock quantity.
+* Mark the product available or unavailable.
+* Upload or replace the product image.
+
+The initial customer-facing product must be fresh coconut water.
+
+Requirements:
+
+* Validate price and stock on the server.
+* Prevent negative stock and invalid prices.
+* Validate image MIME type, size, and extension.
+* Generate safe filenames.
+* Prevent uploaded files from being executed as PHP.
+* Store images in a properly configured location.
+* Keep old order price snapshots unchanged when a product price is edited.
+
+Admin changes must appear on the customer website after being saved.
+
+6.5 Delivery settings
+
+Admin must be able to configure:
+
+* Local delivery enabled or disabled.
+* Shop pickup enabled or disabled.
+* Delivery charge.
+* Minimum order amount.
+* Delivery areas or supported service areas.
+* Other essential delivery settings explicitly required for checkout.
+
+Requirements:
+
+* Save settings in MySQL.
+* Validate settings on the server.
+* Recalculate charges during checkout.
+* Prevent customers from bypassing delivery restrictions by modifying browser data.
+
+Do not add a complex delivery-driver tracking system.
+
+6.6 Sales reports
+
+Provide:
+
+* Daily sales.
+* Monthly sales.
+* Date-range reports.
+* Total orders.
+* Delivered orders.
+* Pending orders.
+* Cancelled orders.
+* Cash payment summary.
+* Online payment summary where applicable.
+* Historical order information.
+
+Use Chart.js for relevant visual reports.
+
+Ensure report figures are calculated using a consistent and documented business definition.
+
+Use safe query filters, indexes, and pagination where appropriate.
+
+SECTION 7 — MYSQL DATABASE DESIGN
+
+Create a complete, normalized MySQL schema appropriate to this application.
+
+Include tables for the required entities, such as:
+
+* Admin users.
+* Products.
+* Orders.
+* Order items.
+* Order status history.
+* Business and delivery settings.
+* Payment records or payment status, as required.
+* Customers if persistent customer records are needed.
+* Secure order-access or OTP verification data if that mechanism is implemented.
+
+Use suitable:
+
+* Primary keys.
+* Foreign keys.
+* Unique constraints.
+* Indexes.
+* Created and updated timestamps.
+* Decimal monetary columns.
+* Valid status values and constraints where supported.
+
+Order history integrity
+
+Order items must store a snapshot of the product name, unit price, and quantity at the time of ordering.
+
+Updating a product’s name or price must not rewrite historical order records.
+
+Database integrity
+
+* Use transactions for critical multi-step operations.
+* Prevent duplicate order creation.
+* Avoid race conditions in stock updates.
+* Keep order totals internally consistent.
+* Store timestamps consistently and display them in the configured business timezone.
+* Add appropriate indexes for order lookup, date filtering, product availability, and reports.
+
+Provide:
+
+* A complete SQL schema file.
+* Any safe initial seed/setup data required.
+* Database setup instructions.
+* A documented method to create the initial administrator securely.
+
+Do not include real production credentials in SQL files or source code.
+
+SECTION 8 — PHP ARCHITECTURE AND PROJECT ORGANIZATION
+
+Use a simple, maintainable, PHP-first architecture without a full-stack framework.
+
+An example structure is:
+
+* public/index.php — public entry point.
+* public/assets/css/ — stylesheets.
+* public/assets/js/ — standard JavaScript.
+* public/assets/images/ — public product images.
+* app/bootstrap.php — application initialization.
+* app/config/ — configuration loading.
+* app/controllers/ — request handlers.
+* app/models/ — database access and models.
+* app/services/ — business operations.
+* app/views/ — PHP-rendered templates.
+* app/middleware/ — authentication and request protections.
+* admin/ — protected admin entry points or admin routes.
+* database/schema.sql — MySQL schema.
+* storage/logs/ — protected logs.
+* storage/uploads/ — controlled upload storage where appropriate.
+* .env.example — example environment variables, if environment-based configuration is implemented.
+* README.md — setup and deployment documentation.
+
+Adjust the structure if a simpler secure design is more suitable.
+
+Do not create unnecessary layers, empty directories, fake abstractions, or unused modules.
+
+Do not use .ts or .tsx anywhere in this architecture.
+
+Keep database credentials and private files outside the public web root whenever possible.
+
+If the hosting environment supports only standard PHP and MySQL, the application should remain deployable without requiring a separate Node.js server.
+
+SECTION 9 — SECURITY REQUIREMENTS
+
+Implement all relevant protections.
+
+Database security
+
+* Use PDO prepared statements.
+* Never concatenate untrusted values into SQL.
+* Validate sorting, filtering, and pagination parameters.
+* Use database transactions for critical operations.
+
+Cross-site scripting
+
+* Escape untrusted output when rendering HTML.
+* Validate and sanitize inputs according to their intended use.
+* Do not treat input sanitization as a substitute for contextual output escaping.
+
+CSRF
+
+* Implement CSRF protection for state-changing requests.
+* Validate tokens server-side.
+* Use POST or another appropriate non-GET method for changes.
+
+Authentication and authorization
+
+* Hash passwords securely.
+* Protect admin routes and actions.
+* Regenerate sessions after authentication.
+* Rate-limit login attempts.
+* Use secure logout.
+* Check permissions on the server for every protected action.
+
+Sessions and cookies
+
+* Use HttpOnly cookies.
+* Enable Secure cookies when HTTPS is used.
+* Use appropriate SameSite settings.
+* Apply suitable session timeouts and session ID regeneration.
+
+File uploads
+
+* Validate actual file type and file size.
+* Generate safe filenames.
+* Prevent script execution in upload directories.
+* Reject unsafe uploads.
+* Do not trust client-supplied file extensions.
+
+Business logic
+
+* Recalculate product prices, stock, delivery charges, and totals on the server.
+* Do not trust client-submitted order totals.
+* Prevent negative quantities and negative stock.
+* Protect against duplicate submissions.
+* Validate order status transitions.
+* Ensure cancellation and stock restoration cannot be repeated to manipulate inventory.
+
+Error handling
+
+* Do not display database credentials, stack traces, or sensitive server details to customers.
+* Log appropriate errors securely.
+* Display understandable error messages.
+* Do not silently swallow critical failures.
+
+SECTION 10 — PERFORMANCE AND RESPONSIVE BEHAVIOR
+
+The website must:
+
+* Work on mobile, tablet, laptop, and desktop.
+* Use responsive layouts.
+* Load appropriately sized product images.
+* Avoid unnecessarily large JavaScript bundles.
+* Minimize unnecessary dependencies.
+* Use efficient database queries.
+* Paginate large order lists.
+* Add relevant indexes.
+* Avoid repeated database queries when they can be safely reduced.
+* Keep the shopping flow simple.
+
+Use accessible labels, sensible contrast, keyboard-operable controls, and clear validation messages.
+
+Do not add excessive animations or visual effects that conflict with the reference image.
+
+SECTION 11 — TESTING AND QUALITY ASSURANCE
+
+Do not stop after generating code. Test the actual implementation.
+
+Customer tests
+
+* Home page loads.
+* Product price loads from MySQL.
+* Product stock status is correct.
+* Quantity controls work.
+* Add to Cart works.
+* Cart quantity updates work.
+* Removing an item works.
+* Empty cart state works.
+* Checkout validation works.
+* Pickup checkout works when enabled.
+* Delivery checkout works when enabled.
+* Disabled fulfilment methods cannot be used.
+* Delivery charges are calculated correctly.
+* Minimum order rules are enforced.
+* Order totals are recalculated on the server.
+* Order creation works.
+* Duplicate submissions do not create duplicate orders.
+* Order confirmation displays the correct data.
+* Secure order lookup works.
+* Cancelled orders and stock changes remain consistent.
+
+Admin tests
+
+* Admin login works.
+* Invalid login is rejected.
+* Unauthorized users cannot access admin pages.
+* Logout works.
+* Password change works.
+* Product price changes are reflected on the customer website.
+* Stock updates work.
+* Product availability changes work.
+* Order status changes work.
+* Cancellation and stock restoration work correctly.
+* Delivery settings persist.
+* Sales reports use actual database data.
+* Invalid admin inputs are rejected.
+
+Security tests
+
+* SQL injection attempts do not bypass queries.
+* CSRF checks reject invalid requests.
+* Output escaping protects against XSS.
+* Customers cannot access other customers’ private orders.
+* Customers cannot access admin functionality.
+* Invalid product IDs and quantities are rejected.
+* Unauthorized file uploads are rejected.
+* Online payments are not marked successful without verified confirmation.
+
+UI tests
+
+* Compare the implementation with the uploaded reference image.
+* Test mobile and desktop screen sizes.
+* Confirm the bottom navigation stays fixed during scrolling.
+* Confirm the navigation does not hide content or checkout buttons.
+* Confirm all buttons and links have working destinations or actions.
+* Confirm empty and error states match the design.
+
+Use the available testing tools. Do not claim that a test passed unless it was actually run.
+
+SECTION 12 — FINAL FORBIDDEN-FILE SCAN
+
+Before delivery, run a recursive scan of the entire project.
+
+Search for:
+
+* Any filename ending in .ts.
+* Any filename ending in .tsx.
+* TypeScript imports or references.
+* TSX build commands.
+* TypeScript-specific configuration that is no longer needed.
+
+Perform the scan case-insensitively.
+
+Delete all forbidden .ts and .tsx project files if any exist. Rewrite any required functionality using valid PHP or ordinary JavaScript.
+
+After deletion:
+
+1. Fix references to the deleted files.
+2. Confirm the application does not depend on them.
+3. Run the scan again.
+4. Confirm zero .ts files and zero .tsx files remain.
+5. Include the actual scan result in the final development report.
+
+Do not skip this step even if the application appears to work.
+
+SECTION 13 — DELIVERY REQUIREMENTS
+
+Deliver a complete, organized project containing:
+
+* All required PHP source files.
+* Customer-facing pages.
+* Admin pages.
+* Tailwind CSS styles.
+* Alpine.js interactions.
+* Chart.js reports.
+* SVG icons.
+* Required images and assets.
+* MySQL schema and setup/import SQL.
+* Configuration example.
+* Safe initial admin setup procedure.
+* Input validation and security protections.
+* Installation instructions.
+* Deployment instructions.
+* A clear README.
+
+Document:
+
+* Required PHP version.
+* Required PHP extensions.
+* MySQL database creation and import steps.
+* Database configuration.
+* Web server document root.
+* Writable storage directories.
+* HTTPS and session configuration.
+* Admin account setup.
+* Any optional payment or OTP provider configuration.
+
+Do not expose private keys, database passwords, production secrets, or real customer information.
+
+Do not deliver only a plan, report, wireframe, or nonfunctional mockup. Build the actual working project within the available workspace.
+
+If the workspace has limitations, explain exactly which parts could not be completed. Do not falsely claim that a feature is functional.
+
+SECTION 14 — REQUIRED DEVELOPMENT ORDER
+
+Follow this order:
+
+Step 1: Inspect the reference image.
+
+Study the image and establish the UI structure before coding.
+
+Step 2: Inspect the workspace.
+
+Check existing files before overwriting anything. Preserve useful work only if it complies with this specification. Remove incompatible starter-template artifacts as appropriate.
+
+Step 3: Create the PHP/MySQL architecture.
+
+Set up the PHP entry point, configuration, routing approach, database connection, and schema.
+
+Step 4: Build the reference-matched UI.
+
+Implement the home, product, cart, checkout, confirmation, order lookup, and mobile bottom navigation.
+
+Step 5: Build the admin panel.
+
+Implement authentication, dashboard, product management, order management, delivery settings, and sales reports.
+
+Step 6: Connect all functionality to MySQL.
+
+Implement actual persistence, validation, stock handling, order creation, settings, and reports.
+
+Step 7: Test the application.
+
+Run functional tests, security checks, responsive UI checks, and visual comparisons.
+
+Step 8: Audit project files.
+
+Search recursively for .ts and .tsx, delete any forbidden project files, fix references, and repeat the scan.
+
+Step 9: Deliver the finished project.
+
+Provide installation instructions and an accurate summary of what has been built and tested.
+
+FINAL NON-NEGOTIABLE INSTRUCTIONS
+
+* Use the uploaded reference image as the primary UI design source.
+* Reproduce its visual appearance as closely as possible.
+* Use PHP 8.2+ for the server-side application.
+* Use MySQL only for the database.
+* Use PDO prepared statements.
+* Use Tailwind CSS, Alpine.js, Chart.js, and SVG icons where required.
+* Do not use Laravel or Symfony.
+* Do not use React, Vue, Next.js, or Bootstrap.
+* Do not use TypeScript.
+* Do not create any .ts or .tsx files.
+* If any .ts or .tsx project files are accidentally created, find and delete them, fix all references, and rerun the file audit.
+* Final .ts count must be zero.
+* Final .tsx count must be zero.
+* Keep the business limited to fresh coconut water.
+* Implement the customer website and admin panel as working features.
+* Use MySQL for persistent business data.
+* Keep the mobile bottom navigation fixed and visible while scrolling.
+* Do not invent prices, successful payments, test results, or completed features.
+* Do not stop after making the UI.
+* Do not change the approved reference design without a genuine technical reason.
+
+Begin by inspecting the uploaded reference image and the current workspace. Then build and test the complete PHP/MySQL website according to every requirement above.

@@ -1,0 +1,18 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+
+    # Ensure /install and /install/ route immediately to installer
+    RewriteRule ^install/?$ install/index.php [L,QSA]
+    RewriteRule ^install/(.*)$ install/index.php [L,QSA]
+
+    # Serve existing files and directories directly
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    # Route all other requests through front controller
+    RewriteRule ^(.*)$ index.php [L,QSA]
+</IfModule>
+
+DirectoryIndex index.php index.html
