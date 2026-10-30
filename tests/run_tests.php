@@ -145,6 +145,14 @@ require_once __DIR__ . '/test_customer_auth.php';
 $passCount += $authPass;
 $failCount += $authFail;
 
+// ---------------------------------------------------------
+// 8. COUPONS & WHATSAPP POPUP TEST SUITE
+// ---------------------------------------------------------
+echo "\n";
+require_once __DIR__ . '/test_coupons_and_whatsapp.php';
+$passCount += $cPass;
+$failCount += $cFail;
+
 echo "\n========================================================\n";
 echo "OVERALL SYSTEM SUMMARY: {$passCount} PASSED, {$failCount} FAILED\n";
 echo "========================================================\n";

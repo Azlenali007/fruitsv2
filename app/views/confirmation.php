@@ -74,13 +74,23 @@ require_once __DIR__ . '/layouts/header.php';
                 <span class="font-bold text-gray-900">₹<?= number_format($item['subtotal']) ?></span>
             </div>
             <?php endforeach; ?>
+            <?php if (!empty($order['coupon_code'])): ?>
+            <div class="flex justify-between items-center text-emerald-700 font-semibold pt-1">
+                <span>Coupon Applied (<?= e($order['coupon_code']) ?>):</span>
+                <span>-₹<?= number_format((float)($order['discount_amount'] ?? 0) + (float)($order['delivery_discount'] ?? 0), 2) ?></span>
+            </div>
+            <?php endif; ?>
             <div class="flex justify-between items-center text-gray-500 pt-1">
                 <span>Delivery:</span>
-                <span>₹<?= number_format($order['delivery_charge'] ?? 40) ?></span>
+                <?php if ((float)($order['delivery_discount'] ?? 0) > 0): ?>
+                    <span class="text-emerald-700 font-bold">FREE (Saved ₹<?= number_format($order['delivery_discount'], 2) ?>)</span>
+                <?php else: ?>
+                    <span>₹<?= number_format($order['delivery_charge'] ?? 40, 2) ?></span>
+                <?php endif; ?>
             </div>
             <div class="flex justify-between items-center text-sm font-extrabold text-gray-950 pt-1 border-t border-gray-100">
                 <span>Total Amount:</span>
-                <span class="text-brand-700">₹<?= number_format($order['total_amount'] ?? 120) ?></span>
+                <span class="text-brand-700">₹<?= number_format($order['total_amount'] ?? 120, 2) ?></span>
             </div>
         </div>
         <?php endif; ?>

@@ -159,6 +159,72 @@ try {
             header('Location: /cart');
             break;
 
+        case '/cart/apply-coupon':
+            if ($method === 'POST') {
+                $isAjax = (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') 
+                    || (isset($_SERVER['HTTP_ACCEPT']) && str_contains($_SERVER['HTTP_ACCEPT'], 'application/json'))
+                    || isset($_POST['is_ajax']);
+
+                if (!verify_csrf_token($_POST[CSRF_TOKEN_KEY] ?? '')) {
+                    if ($isAjax) {
+                        json_response(['success' => false, 'error' => 'Security token expired. Please refresh the page.'], 403);
+                    }
+                    set_flash('error', 'Security token expired. Please try again.');
+                    $redirect = $_POST['redirect_to'] ?? '/cart';
+                    header('Location: ' . $redirect);
+                    exit;
+                }
+
+                $code = trim($_POST['coupon_code'] ?? '');
+                $customer = CustomerAuthService::user();
+                $customerId = $customer ? (int)$customer['id'] : null;
+                $phone = $customer['phone'] ?? trim($_POST['customer_phone'] ?? '');
+                $fulfilment = trim($_POST['fulfilment_method'] ?? 'delivery');
+
+                $res = CartService::applyCoupon($code, $customerId, $phone, $fulfilment);
+                if ($isAjax) {
+                    $totals = CartService::calculateCheckoutTotals($fulfilment, $customerId, $phone);
+                    json_response(array_merge($res, ['totals' => $totals]));
+                }
+
+                if ($res['success']) {
+                    set_flash('success', $res['message']);
+                } else {
+                    set_flash('error', $res['error']);
+                }
+
+                $redirect = $_POST['redirect_to'] ?? '/cart';
+                header('Location: ' . $redirect);
+                exit;
+            }
+            header('Location: /cart');
+            break;
+
+        case '/cart/remove-coupon':
+            if ($method === 'POST') {
+                $isAjax = (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') 
+                    || (isset($_SERVER['HTTP_ACCEPT']) && str_contains($_SERVER['HTTP_ACCEPT'], 'application/json'))
+                    || isset($_POST['is_ajax']);
+
+                if (verify_csrf_token($_POST[CSRF_TOKEN_KEY] ?? '')) {
+                    CartService::removeCoupon();
+                    if ($isAjax) {
+                        $customer = CustomerAuthService::user();
+                        $customerId = $customer ? (int)$customer['id'] : null;
+                        $phone = $customer['phone'] ?? trim($_POST['customer_phone'] ?? '');
+                        $fulfilment = trim($_POST['fulfilment_method'] ?? 'delivery');
+                        $totals = CartService::calculateCheckoutTotals($fulfilment, $customerId, $phone);
+                        json_response(['success' => true, 'message' => 'Coupon removed.', 'totals' => $totals]);
+                    }
+                    set_flash('info', 'Coupon removed from your order.');
+                }
+                $redirect = $_POST['redirect_to'] ?? '/cart';
+                header('Location: ' . $redirect);
+                exit;
+            }
+            header('Location: /cart');
+            break;
+
         case '/checkout':
             CustomerAuthService::requireLogin('/checkout');
             require __DIR__ . '/../app/views/checkout.php';
@@ -478,6 +544,123 @@ try {
             header('Location: /admin/products');
             break;
 
+        // ------------------------------------------------
+        // Admin Coupon Routes
+        // ------------------------------------------------
+        case '/admin/coupons':
+            AuthService::requireAdmin();
+            require __DIR__ . '/../app/views/admin/coupons.php';
+            break;
+
+        case '/admin/coupons/create':
+            AuthService::requireAdmin();
+            $coupon = null;
+            require __DIR__ . '/../app/views/admin/coupon-form.php';
+            break;
+
+        case '/admin/coupons/store':
+            AuthService::requireAdmin();
+            if ($method === 'POST') {
+                if (!verify_csrf_token($_POST[CSRF_TOKEN_KEY] ?? '')) {
+                    set_flash('error', 'Security token mismatch. Please try again.');
+                    header('Location: /admin/coupons/create');
+                    exit;
+                }
+                $res = Coupon::create($_POST);
+                if ($res['success']) {
+                    set_flash('success', 'Coupon ' . strtoupper(trim($_POST['code'])) . ' created successfully.');
+                    header('Location: /admin/coupons');
+                    exit;
+                } else {
+                    set_flash('error', $res['error']);
+                    header('Location: /admin/coupons/create');
+                    exit;
+                }
+            }
+            header('Location: /admin/coupons');
+            break;
+
+        case '/admin/coupons/edit':
+            AuthService::requireAdmin();
+            $couponId = (int)($_GET['id'] ?? 0);
+            $coupon = Coupon::getById($couponId);
+            if (!$coupon) {
+                set_flash('error', 'Coupon not found.');
+                header('Location: /admin/coupons');
+                exit;
+            }
+            require __DIR__ . '/../app/views/admin/coupon-form.php';
+            break;
+
+        case '/admin/coupons/update':
+            AuthService::requireAdmin();
+            if ($method === 'POST') {
+                if (!verify_csrf_token($_POST[CSRF_TOKEN_KEY] ?? '')) {
+                    set_flash('error', 'Security token mismatch.');
+                    header('Location: /admin/coupons');
+                    exit;
+                }
+                $couponId = (int)($_POST['coupon_id'] ?? 0);
+                $res = Coupon::update($couponId, $_POST);
+                if ($res['success']) {
+                    set_flash('success', 'Coupon successfully updated.');
+                    header('Location: /admin/coupons');
+                    exit;
+                } else {
+                    set_flash('error', $res['error']);
+                    header('Location: /admin/coupons/edit?id=' . $couponId);
+                    exit;
+                }
+            }
+            header('Location: /admin/coupons');
+            break;
+
+        case '/admin/coupons/toggle-status':
+            AuthService::requireAdmin();
+            if ($method === 'POST') {
+                if (!verify_csrf_token($_POST[CSRF_TOKEN_KEY] ?? '')) {
+                    set_flash('error', 'CSRF verification failed.');
+                    header('Location: /admin/coupons');
+                    exit;
+                }
+                $couponId = (int)($_POST['coupon_id'] ?? 0);
+                Coupon::toggleStatus($couponId);
+                set_flash('success', 'Coupon status updated.');
+            }
+            header('Location: /admin/coupons');
+            break;
+
+        case '/admin/coupons/delete':
+            AuthService::requireAdmin();
+            if ($method === 'POST') {
+                if (!verify_csrf_token($_POST[CSRF_TOKEN_KEY] ?? '')) {
+                    set_flash('error', 'CSRF verification failed.');
+                    header('Location: /admin/coupons');
+                    exit;
+                }
+                $couponId = (int)($_POST['coupon_id'] ?? 0);
+                $success = Coupon::delete($couponId);
+                if ($success) {
+                    set_flash('success', 'Coupon successfully deleted or deactivated.');
+                } else {
+                    set_flash('error', 'Failed to delete coupon.');
+                }
+            }
+            header('Location: /admin/coupons');
+            break;
+
+        case '/admin/coupons/view':
+            AuthService::requireAdmin();
+            $couponId = (int)($_GET['id'] ?? 0);
+            $coupon = Coupon::getById($couponId);
+            if (!$coupon) {
+                set_flash('error', 'Coupon not found.');
+                header('Location: /admin/coupons');
+                exit;
+            }
+            require __DIR__ . '/../app/views/admin/coupon-detail.php';
+            break;
+
         case '/admin/customers':
             AuthService::requireAdmin();
             require __DIR__ . '/../app/views/admin/customers.php';
@@ -509,6 +692,13 @@ try {
                     exit;
                 }
 
+                $waUrl = trim($_POST['whatsapp_channel_url'] ?? '');
+                if (!empty($waUrl) && !str_starts_with($waUrl, 'https://')) {
+                    set_flash('error', 'WhatsApp Channel Link must be a valid secure HTTPS link (e.g. https://whatsapp.com/channel/...).');
+                    header('Location: /admin/settings');
+                    exit;
+                }
+
                 $settingsData = [
                     'local_delivery_enabled' => isset($_POST['local_delivery_enabled']) ? '1' : '0',
                     'shop_pickup_enabled' => isset($_POST['shop_pickup_enabled']) ? '1' : '0',
@@ -521,10 +711,16 @@ try {
                     'store_address' => trim($_POST['store_address'] ?? ''),
                     'store_open_time' => trim($_POST['store_open_time'] ?? '07:00 AM'),
                     'store_close_time' => trim($_POST['store_close_time'] ?? '09:00 PM'),
+                    'whatsapp_popup_enabled' => isset($_POST['whatsapp_popup_enabled']) ? '1' : '0',
+                    'whatsapp_channel_url' => $waUrl,
+                    'whatsapp_popup_heading' => trim($_POST['whatsapp_popup_heading'] ?? 'Join Our WhatsApp Channel'),
+                    'whatsapp_popup_message' => trim($_POST['whatsapp_popup_message'] ?? 'Stay updated with fresh daily harvest arrivals, exclusive seasonal offers, and health tips!'),
+                    'whatsapp_popup_button_text' => trim($_POST['whatsapp_popup_button_text'] ?? 'Join WhatsApp Channel'),
+                    'whatsapp_popup_frequency' => in_array($_POST['whatsapp_popup_frequency'] ?? '', ['session', 'daily', 'weekly', 'always']) ? $_POST['whatsapp_popup_frequency'] : 'session',
                 ];
 
                 Setting::setMany($settingsData);
-                set_flash('success', 'Store delivery and business settings updated.');
+                set_flash('success', 'Store delivery, business, and WhatsApp popup settings successfully saved.');
                 header('Location: /admin/settings');
                 exit;
             }

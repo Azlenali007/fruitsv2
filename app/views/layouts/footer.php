@@ -143,5 +143,8 @@ $storeAddress = Setting::get('store_address', '123, Green Park, Near Main Road, 
     </div>
 </nav>
 
+<!-- WhatsApp Channel Modal Popup -->
+<?php require_once __DIR__ . '/../components/whatsapp-popup.php'; ?>
+
 </body>
 </html>

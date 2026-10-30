@@ -78,11 +78,14 @@ class OrderService {
         }
 
         // 5. Build order data strictly tying to authenticated customer ID
+        $couponCode = !empty($postData['coupon_code']) ? trim($postData['coupon_code']) : ($_SESSION[CartService::COUPON_SESSION_KEY] ?? null);
+
         $orderData = [
             'customer_id' => (int)$customer['id'], // Derived from secure server-side session
             'customer_name' => $name,
             'customer_phone' => '+91 ' . $cleanPhone,
             'fulfilment_method' => $fulfilment,
+            'coupon_code' => $couponCode,
             'delivery_address' => $address,
             'payment_method' => $paymentMethod,
             'idempotency_key' => $postData['idempotency_key'] ?? null,
@@ -92,7 +95,7 @@ class OrderService {
         $result = Order::createOrder($orderData, $cart['items']);
 
         if ($result['success']) {
-            // Clear cart upon successful order
+            // Clear cart & applied coupon upon successful order
             CartService::clear();
         }
 

@@ -68,9 +68,9 @@ class Order {
                 $stmtDeduct->execute([$quantity, $productId]);
             }
 
-            // 3. Calculate delivery charge and total
+            // 3. Calculate delivery charge and coupon discounts
             $fulfilment = $orderData['fulfilment_method'] ?? 'delivery';
-            $deliveryCharge = 0.00;
+            $originalDeliveryCharge = 0.00;
 
             if ($fulfilment === 'delivery') {
                 $deliveryEnabled = Setting::get('local_delivery_enabled', '1') === '1';
@@ -83,24 +83,100 @@ class Order {
                 }
                 $freeAbove = (float)Setting::get('free_delivery_above', '500.00');
                 if ($subtotal >= $freeAbove) {
-                    $deliveryCharge = 0.00;
+                    $originalDeliveryCharge = 0.00;
                 } else {
-                    $deliveryCharge = (float)Setting::get('delivery_charge', '40.00');
+                    $originalDeliveryCharge = (float)Setting::get('delivery_charge', '40.00');
                 }
             } else {
                 $pickupEnabled = Setting::get('shop_pickup_enabled', '1') === '1';
                 if (!$pickupEnabled) {
                     throw new Exception("Shop pickup is currently not available.");
                 }
-                $deliveryCharge = 0.00;
+                $originalDeliveryCharge = 0.00;
             }
 
-            $totalAmount = $subtotal + $deliveryCharge;
+            // Coupon validation & discount computation
+            $couponId = null;
+            $couponCode = null;
+            $couponType = null;
+            $discountAmount = 0.00;
+            $deliveryDiscount = 0.00;
 
-            // 4. Generate unique readable order number (e.g. NA1024, NA1025)
+            if (!empty($orderData['coupon_code'])) {
+                $rawCouponCode = Coupon::normalizeCode($orderData['coupon_code']);
+                $stmtCpn = $pdo->prepare("SELECT * FROM `coupons` WHERE `code` = ? FOR UPDATE");
+                $stmtCpn->execute([$rawCouponCode]);
+                $coupon = $stmtCpn->fetch();
+
+                if (!$coupon) {
+                    throw new Exception("Coupon code '{$rawCouponCode}' is invalid.");
+                }
+
+                if ((int)$coupon['is_active'] !== 1) {
+                    throw new Exception("Coupon '{$rawCouponCode}' is currently disabled.");
+                }
+
+                $nowTime = time();
+                if (!empty($coupon['start_date']) && strtotime($coupon['start_date']) > $nowTime) {
+                    throw new Exception("Coupon '{$rawCouponCode}' is not active yet.");
+                }
+
+                if (!empty($coupon['expiry_date']) && strtotime($coupon['expiry_date']) < $nowTime) {
+                    throw new Exception("Coupon '{$rawCouponCode}' has expired.");
+                }
+
+                if ((float)$coupon['min_order_amount'] > 0 && $subtotal < (float)$coupon['min_order_amount']) {
+                    throw new Exception("Minimum order amount of ₹" . number_format($coupon['min_order_amount'], 2) . " required for coupon '{$rawCouponCode}'.");
+                }
+
+                if (!empty($coupon['max_uses']) && (int)$coupon['current_uses'] >= (int)$coupon['max_uses']) {
+                    throw new Exception("Coupon '{$rawCouponCode}' has reached its maximum global usage limit.");
+                }
+
+                // Check per-customer limit
+                $maxPerCust = !empty($coupon['max_uses_per_customer']) ? (int)$coupon['max_uses_per_customer'] : null;
+                if ($maxPerCust !== null) {
+                    $cPhoneClean = Customer::normalizePhone($orderData['customer_phone'] ?? '');
+                    $cId = !empty($orderData['customer_id']) ? (int)$orderData['customer_id'] : 0;
+
+                    $stmtCustUses = $pdo->prepare("
+                        SELECT COUNT(*) FROM `coupon_usage` 
+                        WHERE `coupon_id` = ? AND (
+                            (? > 0 AND `customer_id` = ?) 
+                            OR `customer_phone` = ?
+                            OR REPLACE(REPLACE(`customer_phone`, ' ', ''), '-', '') LIKE ?
+                        )
+                    ");
+                    $stmtCustUses->execute([$coupon['id'], $cId, $cId, $cPhoneClean, '%' . $cPhoneClean]);
+                    $custUses = (int)$stmtCustUses->fetchColumn();
+
+                    if ($custUses >= $maxPerCust) {
+                        throw new Exception("You have already used coupon '{$rawCouponCode}' the maximum allowed {$maxPerCust} time(s).");
+                    }
+                }
+
+                // Calculate discounts
+                $calc = Coupon::calculateDiscount($coupon, $subtotal, $originalDeliveryCharge);
+                $couponId = (int)$coupon['id'];
+                $couponCode = $coupon['code'];
+                $couponType = $coupon['type'];
+                $discountAmount = $calc['discount_amount'];
+                $deliveryDiscount = $calc['delivery_discount'];
+            }
+
+            $effectiveDeliveryCharge = max(0.00, $originalDeliveryCharge - $deliveryDiscount);
+            $totalAmount = max(0.00, $subtotal - $discountAmount) + $effectiveDeliveryCharge;
+
+            // 4. Generate unique readable order number (e.g. NA1025, NA1026)
             $stmtLast = $pdo->query("SELECT `id` FROM `orders` ORDER BY `id` DESC LIMIT 1");
             $lastId = (int)$stmtLast->fetchColumn();
-            $orderNumber = 'NA' . (1000 + $lastId + 1);
+            $stmtCheckNum = $pdo->prepare("SELECT COUNT(*) FROM `orders` WHERE `order_number` = ?");
+            do {
+                $lastId++;
+                $orderNumber = 'NA' . (1000 + $lastId);
+                $stmtCheckNum->execute([$orderNumber]);
+                $numExists = (int)$stmtCheckNum->fetchColumn() > 0;
+            } while ($numExists);
 
             $trackingHash = bin2hex(random_bytes(24));
             $estimatedDelivery = $fulfilment === 'delivery' ? 'Today, ' . date('g:i A', strtotime('+45 minutes')) . ' - ' . date('g:i A', strtotime('+120 minutes')) : 'Ready for pickup in 15 minutes';
@@ -135,15 +211,15 @@ class Order {
             $stmtOrder = $pdo->prepare("
                 INSERT INTO `orders` (
                     `order_number`, `customer_id`, `customer_name`, `customer_phone`,
-                    `fulfilment_method`, `delivery_address`, `subtotal`, `delivery_charge`,
-                    `total_amount`, `payment_method`, `payment_status`, `order_status`,
+                    `fulfilment_method`, `coupon_id`, `coupon_code`, `coupon_type`,
+                    `delivery_address`, `subtotal`, `discount_amount`, `original_delivery_charge`,
+                    `delivery_discount`, `delivery_charge`, `total_amount`,
+                    `payment_method`, `payment_status`, `order_status`,
                     `tracking_hash`, `estimated_delivery`, `notes`, `idempotency_key`, `created_at`
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'confirmed', ?, ?, ?, ?, NOW())
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'confirmed', ?, ?, ?, ?, NOW())
             ");
 
             $paymentMethod = $orderData['payment_method'] ?? 'cod';
-            // PAYMENT SAFETY: Never mark online payment as 'paid' without real gateway verification.
-            // Payment status remains 'pending' for all orders until verified.
             $paymentStatus = 'pending';
 
             $stmtOrder->execute([
@@ -152,9 +228,15 @@ class Order {
                 $orderData['customer_name'],
                 $orderData['customer_phone'],
                 $fulfilment,
+                $couponId,
+                $couponCode,
+                $couponType,
                 $orderData['delivery_address'] ?? '',
                 $subtotal,
-                $deliveryCharge,
+                $discountAmount,
+                $originalDeliveryCharge,
+                $deliveryDiscount,
+                $effectiveDeliveryCharge,
                 $totalAmount,
                 $paymentMethod,
                 $paymentStatus,
@@ -165,6 +247,19 @@ class Order {
             ]);
 
             $orderId = (int)$pdo->lastInsertId();
+
+            // Record coupon usage in coupon_usage audit table and increment usage counter
+            if ($couponId) {
+                Coupon::recordUsage(
+                    $couponId,
+                    $orderId,
+                    $customerId,
+                    $orderData['customer_phone'],
+                    $discountAmount,
+                    $deliveryDiscount,
+                    $pdo
+                );
+            }
 
             // 7. Insert Order Items (Immutable price snapshot)
             $stmtItem = $pdo->prepare("

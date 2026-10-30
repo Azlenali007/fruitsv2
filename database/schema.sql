@@ -81,8 +81,14 @@ CREATE TABLE IF NOT EXISTS `orders` (
     `customer_name` VARCHAR(100) NOT NULL,
     `customer_phone` VARCHAR(20) NOT NULL,
     `fulfilment_method` ENUM('delivery', 'pickup') NOT NULL DEFAULT 'delivery',
+    `coupon_id` INT UNSIGNED NULL,
+    `coupon_code` VARCHAR(50) NULL,
+    `coupon_type` VARCHAR(20) NULL,
     `delivery_address` TEXT NULL,
     `subtotal` DECIMAL(10,2) NOT NULL,
+    `discount_amount` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    `original_delivery_charge` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    `delivery_discount` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
     `delivery_charge` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
     `total_amount` DECIMAL(10,2) NOT NULL,
     `payment_method` ENUM('cod', 'online') NOT NULL DEFAULT 'cod',
@@ -149,4 +155,47 @@ CREATE TABLE IF NOT EXISTS `customer_login_attempts` (
     INDEX `idx_ident_time` (`identifier`, `attempted_at`),
     INDEX `idx_ip_time` (`ip_address`, `attempted_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 11. Coupons Table
+CREATE TABLE IF NOT EXISTS `coupons` (
+    `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `code` VARCHAR(50) NOT NULL UNIQUE,
+    `name` VARCHAR(100) NOT NULL,
+    `description` TEXT NULL,
+    `type` ENUM('percentage', 'fixed', 'free_delivery') NOT NULL DEFAULT 'percentage',
+    `discount_value` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    `min_order_amount` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    `max_discount_amount` DECIMAL(10,2) NULL,
+    `start_date` DATETIME NULL,
+    `expiry_date` DATETIME NULL,
+    `max_uses` INT UNSIGNED NULL,
+    `current_uses` INT UNSIGNED NOT NULL DEFAULT 0,
+    `max_uses_per_customer` INT UNSIGNED NULL DEFAULT 1,
+    `is_active` TINYINT(1) NOT NULL DEFAULT 1,
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX `idx_coupon_code` (`code`),
+    INDEX `idx_coupon_active` (`is_active`),
+    INDEX `idx_coupon_dates` (`start_date`, `expiry_date`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 12. Coupon Usage Audit Table
+CREATE TABLE IF NOT EXISTS `coupon_usage` (
+    `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `coupon_id` INT UNSIGNED NOT NULL,
+    `order_id` INT UNSIGNED NOT NULL,
+    `customer_id` INT UNSIGNED NULL,
+    `customer_phone` VARCHAR(20) NOT NULL,
+    `discount_amount` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    `delivery_discount` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    `used_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX `idx_cu_coupon` (`coupon_id`),
+    INDEX `idx_cu_order` (`order_id`),
+    INDEX `idx_cu_customer` (`customer_id`),
+    INDEX `idx_cu_phone` (`customer_phone`),
+    CONSTRAINT `fk_cu_coupon` FOREIGN KEY (`coupon_id`) REFERENCES `coupons` (`id`) ON DELETE CASCADE,
+    CONSTRAINT `fk_cu_order` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE CASCADE,
+    CONSTRAINT `fk_cu_customer` FOREIGN KEY (`customer_id`) REFERENCES `customers` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 

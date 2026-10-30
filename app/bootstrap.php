@@ -71,6 +71,7 @@ require_once __DIR__ . '/models/Product.php';
 require_once __DIR__ . '/models/Order.php';
 require_once __DIR__ . '/models/Admin.php';
 require_once __DIR__ . '/models/Customer.php';
+require_once __DIR__ . '/models/Coupon.php';
 require_once __DIR__ . '/services/CartService.php';
 require_once __DIR__ . '/services/OrderService.php';
 require_once __DIR__ . '/services/AuthService.php';

@@ -53,6 +53,12 @@ try {
         'store_open_time' => '07:00 AM',
         'store_close_time' => '09:00 PM',
         'stock_deduction_policy' => 'order_placement',
+        'whatsapp_popup_enabled' => '1',
+        'whatsapp_channel_url' => 'https://whatsapp.com/channel/0029VaNAFreshFruits',
+        'whatsapp_popup_heading' => 'Join Our WhatsApp Channel',
+        'whatsapp_popup_message' => 'Get real-time fresh coconut harvest alerts, special seasonal discounts, and quick delivery updates straight on WhatsApp!',
+        'whatsapp_popup_button_text' => 'Join WhatsApp Channel',
+        'whatsapp_popup_frequency' => 'session',
     ];
 
     $stmtCheck = $pdo->prepare("SELECT COUNT(*) FROM `settings` WHERE `key_name` = ?");
@@ -180,6 +186,64 @@ try {
 
         echo "Reference order #NA1024 seeded successfully.\n";
     }
+
+    // 8. Seed Default Coupons
+    $defaultCoupons = [
+        [
+            'code' => 'FREEDELIVERY',
+            'name' => 'Free Doorstep Delivery',
+            'description' => 'Enjoy free delivery on any order above ₹80',
+            'type' => 'free_delivery',
+            'discount_value' => 0.00,
+            'min_order_amount' => 80.00,
+            'max_discount_amount' => null,
+            'max_uses' => 500,
+            'max_uses_per_customer' => 2,
+            'is_active' => 1
+        ],
+        [
+            'code' => 'SAVE10',
+            'name' => '10% Healthy Hydration',
+            'description' => 'Get 10% discount on fresh coconut water up to ₹50',
+            'type' => 'percentage',
+            'discount_value' => 10.00,
+            'min_order_amount' => 100.00,
+            'max_discount_amount' => 50.00,
+            'max_uses' => 1000,
+            'max_uses_per_customer' => 3,
+            'is_active' => 1
+        ],
+        [
+            'code' => 'FLAT50',
+            'name' => 'Flat ₹50 Super Saver',
+            'description' => 'Get flat ₹50 off on orders of ₹200 or more',
+            'type' => 'fixed',
+            'discount_value' => 50.00,
+            'min_order_amount' => 200.00,
+            'max_discount_amount' => null,
+            'max_uses' => 200,
+            'max_uses_per_customer' => 1,
+            'is_active' => 1
+        ]
+    ];
+
+    $stmtCouponCheck = $pdo->prepare("SELECT COUNT(*) FROM `coupons` WHERE `code` = ?");
+    $stmtCouponInsert = $pdo->prepare("
+        INSERT INTO `coupons` (`code`, `name`, `description`, `type`, `discount_value`, `min_order_amount`, `max_discount_amount`, `max_uses`, `max_uses_per_customer`, `is_active`)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ");
+
+    foreach ($defaultCoupons as $c) {
+        $stmtCouponCheck->execute([$c['code']]);
+        if ($stmtCouponCheck->fetchColumn() == 0) {
+            $stmtCouponInsert->execute([
+                $c['code'], $c['name'], $c['description'], $c['type'],
+                $c['discount_value'], $c['min_order_amount'], $c['max_discount_amount'],
+                $c['max_uses'], $c['max_uses_per_customer'], $c['is_active']
+            ]);
+        }
+    }
+    echo "Default coupons verified/seeded successfully.\n";
 
     // Record installation lock file
     $lockData = json_encode([

@@ -47,9 +47,22 @@ require_once __DIR__ . '/layout-header.php';
                         <span>Items Subtotal:</span>
                         <span class="font-bold">₹<?= number_format($order['subtotal'], 2) ?></span>
                     </div>
+                    <?php if (!empty($order['coupon_code'])): ?>
+                    <div class="flex justify-between text-emerald-700 font-semibold">
+                        <span>Coupon (<?= e($order['coupon_code']) ?>):</span>
+                        <span>-₹<?= number_format((float)($order['discount_amount'] ?? 0) + (float)($order['delivery_discount'] ?? 0), 2) ?></span>
+                    </div>
+                    <?php endif; ?>
                     <div class="flex justify-between text-gray-600">
                         <span>Delivery Fee:</span>
-                        <span class="font-bold">₹<?= number_format($order['delivery_charge'], 2) ?></span>
+                        <?php if ((float)($order['delivery_discount'] ?? 0) > 0): ?>
+                            <span class="space-x-1">
+                                <span class="line-through text-gray-400">₹<?= number_format($order['original_delivery_charge'] ?? 40, 2) ?></span>
+                                <span class="font-bold text-emerald-700">FREE</span>
+                            </span>
+                        <?php else: ?>
+                            <span class="font-bold">₹<?= number_format($order['delivery_charge'], 2) ?></span>
+                        <?php endif; ?>
                     </div>
                     <div class="flex justify-between text-base font-black text-gray-950 pt-2 border-t border-gray-100">
                         <span>Total Payable:</span>

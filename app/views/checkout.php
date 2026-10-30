@@ -17,10 +17,17 @@ if (empty($cartData['items'])) {
 CustomerAuthService::requireLogin('/checkout');
 $customer = CustomerAuthService::user();
 
-$subtotal = $cartData['subtotal'];
+$subtotal = (float)$cartData['subtotal'];
 $deliveryEnabled = Setting::get('local_delivery_enabled', '1') === '1';
 $pickupEnabled = Setting::get('shop_pickup_enabled', '1') === '1';
 $defaultDeliveryCharge = (float)Setting::get('delivery_charge', '40.00');
+
+$totals = CartService::calculateCheckoutTotals($deliveryEnabled ? 'delivery' : 'pickup', (int)$customer['id'], $customer['phone'] ?? '');
+$appliedCoupon = $totals['coupon'];
+$couponCalc = $totals['coupon_calculation'];
+$discountAmount = (float)$totals['discount_amount'];
+$deliveryDiscount = (float)$totals['delivery_discount'];
+$effectiveDelivery = (float)$totals['delivery_charge'];
 
 // Initial customer details from verified authenticated session
 $savedName = $customer['name'] ?? ($_SESSION['last_customer_name'] ?? '');
@@ -37,11 +44,35 @@ $idempotencyKey = bin2hex(random_bytes(16));
     customerPhone: '<?= e($savedPhone) ?>',
     customerAddress: '<?= e($savedAddress) ?>',
     subtotal: <?= (float)$subtotal ?>,
-    deliveryFee: <?= (float)$defaultDeliveryCharge ?>,
+    defaultDeliveryFee: <?= (float)$defaultDeliveryCharge ?>,
+    discountAmount: <?= (float)$discountAmount ?>,
+    deliveryDiscount: <?= (float)$deliveryDiscount ?>,
+    couponType: '<?= e($appliedCoupon['type'] ?? '') ?>',
+    couponCode: '<?= e($appliedCoupon['code'] ?? '') ?>',
+    get effectiveDeliveryFee() {
+        if (this.fulfilment === 'pickup') return 0;
+        if (this.subtotal >= 500) return 0;
+        return Math.max(0, this.defaultDeliveryFee - this.deliveryDiscount);
+    },
     get total() {
-        return this.fulfilment === 'delivery' ? (this.subtotal + this.deliveryFee) : this.subtotal;
+        const netSubtotal = Math.max(0, this.subtotal - this.discountAmount);
+        return (netSubtotal + this.effectiveDeliveryFee).toFixed(2);
     }
 }">
+
+    <!-- Flash Notification Banner -->
+    <?php $flash = get_flash(); if ($flash): ?>
+    <div class="mb-4 p-3 rounded-xl text-xs font-semibold flex items-center gap-2 <?= $flash['type'] === 'error' ? 'bg-red-50 text-red-800 border border-red-200' : ($flash['type'] === 'success' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-blue-50 text-blue-800 border border-blue-200') ?>">
+        <?php if ($flash['type'] === 'error'): ?>
+        <svg class="w-4 h-4 shrink-0 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        <?php elseif ($flash['type'] === 'success'): ?>
+        <svg class="w-4 h-4 shrink-0 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+        <?php else: ?>
+        <svg class="w-4 h-4 shrink-0 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        <?php endif; ?>
+        <span><?= e($flash['message']) ?></span>
+    </div>
+    <?php endif; ?>
 
     <!-- Header with Back Arrow -->
     <div class="flex items-center gap-3 mb-5">
@@ -154,7 +185,65 @@ $idempotencyKey = bin2hex(random_bytes(16));
             </div>
         </div>
 
-        <!-- SECTION 2: Payment Method (Matches reference image cards layout) -->
+        <!-- SECTION 2: Promotional Coupon Code -->
+        <div class="space-y-3">
+            <div class="flex items-center gap-2 text-sm font-bold text-gray-800">
+                <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+                </svg>
+                <span>Coupon & Offers</span>
+            </div>
+
+            <div class="bg-white rounded-2xl p-4 border border-gray-200/90 shadow-xs">
+                <?php if ($appliedCoupon): ?>
+                    <!-- Applied Coupon display -->
+                    <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3 flex items-center justify-between gap-3">
+                        <div class="space-y-0.5 min-w-0">
+                            <div class="flex items-center gap-2">
+                                <span class="font-mono font-black text-xs text-brand-900 tracking-wider bg-white px-2 py-0.5 rounded border border-emerald-300">
+                                    <?= e($appliedCoupon['code']) ?>
+                                </span>
+                                <span class="text-[11px] font-bold text-emerald-800">
+                                    <?= e($couponCalc['benefit_message'] ?? 'Applied') ?>
+                                </span>
+                            </div>
+                            <p class="text-[10px] text-emerald-700 truncate"><?= e($appliedCoupon['name']) ?></p>
+                        </div>
+                        <button 
+                            type="button" 
+                            @click="document.getElementById('removeCheckoutCouponForm').submit()" 
+                            class="text-xs font-bold text-red-600 hover:text-red-700 hover:underline shrink-0"
+                        >
+                            Remove
+                        </button>
+                    </div>
+                <?php else: ?>
+                    <!-- Coupon Input inside checkout -->
+                    <div class="flex gap-2">
+                        <input 
+                            type="text" 
+                            id="checkoutCouponInput"
+                            placeholder="Enter code (e.g. FREEDELIVERY)" 
+                            oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9_\-]/g, '')"
+                            class="flex-grow bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-mono font-bold tracking-wider uppercase focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                        >
+                        <button 
+                            type="button" 
+                            onclick="applyCheckoutCoupon()" 
+                            class="bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs px-4 py-2 rounded-xl transition shadow-xs shrink-0"
+                        >
+                            Apply
+                        </button>
+                    </div>
+                    <p class="text-[10px] text-gray-400 mt-1.5">Try: <code class="text-brand-700 font-bold">FREEDELIVERY</code>, <code class="text-brand-700 font-bold">SAVE10</code>, or <code class="text-brand-700 font-bold">FLAT50</code></p>
+                <?php endif; ?>
+            </div>
+        </div>
+
+        <!-- Hidden input for coupon_code in order form -->
+        <input type="hidden" name="coupon_code" :value="couponCode">
+
+        <!-- SECTION 3: Payment Method (Matches reference image cards layout) -->
         <div class="space-y-3">
             <div class="flex items-center gap-2 text-sm font-bold text-gray-800">
                 <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -220,18 +309,43 @@ $idempotencyKey = bin2hex(random_bytes(16));
         </div>
 
         <!-- Order Total Preview -->
-        <div class="bg-gray-50 rounded-2xl p-4 border border-gray-100 text-xs text-gray-600 space-y-1.5">
+        <div class="bg-gray-50 rounded-2xl p-4 border border-gray-100 text-xs text-gray-600 space-y-2">
             <div class="flex justify-between">
                 <span>Items Subtotal:</span>
-                <span class="font-bold text-gray-900">₹<?= number_format($subtotal) ?></span>
+                <span class="font-bold text-gray-900">₹<?= number_format($subtotal, 2) ?></span>
             </div>
-            <div class="flex justify-between" x-show="fulfilment === 'delivery'">
+
+            <!-- Discount Row -->
+            <div class="flex justify-between text-emerald-700 font-semibold" x-show="discountAmount > 0" x-cloak>
+                <span>Coupon Discount (<span x-text="couponCode"></span>):</span>
+                <span>-₹<span x-text="discountAmount.toFixed(2)"></span></span>
+            </div>
+
+            <!-- Delivery Row -->
+            <div class="flex justify-between items-center" x-show="fulfilment === 'delivery'">
                 <span>Delivery Charge:</span>
-                <span class="font-bold text-gray-900">₹<?= number_format($defaultDeliveryCharge) ?></span>
+                <div>
+                    <template x-if="deliveryDiscount > 0">
+                        <span class="space-x-1">
+                            <span class="line-through text-gray-400">₹<span x-text="defaultDeliveryFee.toFixed(2)"></span></span>
+                            <span class="font-bold text-emerald-700">FREE</span>
+                        </span>
+                    </template>
+                    <template x-if="deliveryDiscount <= 0">
+                        <span class="font-bold text-gray-900">₹<span x-text="effectiveDeliveryFee.toFixed(2)"></span></span>
+                    </template>
+                </div>
             </div>
-            <div class="flex justify-between text-sm font-extrabold text-gray-950 pt-1 border-t border-gray-200">
-                <span>Final Payable:</span>
-                <span class="text-brand-700 text-base" x-text="'₹' + total"></span>
+
+            <!-- Final Payable Total -->
+            <div class="flex justify-between items-baseline text-sm font-extrabold text-gray-950 pt-2 border-t border-gray-200">
+                <div>
+                    <span>Final Payable:</span>
+                    <?php if ($totals['total_savings'] > 0): ?>
+                    <span class="text-[10px] text-emerald-600 font-bold block">Saved ₹<?= number_format($totals['total_savings'], 2) ?> with coupon</span>
+                    <?php endif; ?>
+                </div>
+                <span class="text-brand-700 text-lg font-black" x-text="'₹' + total"></span>
             </div>
         </div>
 
@@ -246,6 +360,31 @@ $idempotencyKey = bin2hex(random_bytes(16));
         </div>
 
     </form>
+
+    <!-- Hidden standalone form for removing coupon -->
+    <form id="removeCheckoutCouponForm" action="/cart/remove-coupon" method="POST" class="hidden">
+        <input type="hidden" name="<?= CSRF_TOKEN_KEY ?>" value="<?= csrf_token() ?>">
+        <input type="hidden" name="redirect_to" value="/checkout">
+    </form>
+
+    <!-- Hidden standalone form for applying coupon -->
+    <form id="applyCheckoutCouponForm" action="/cart/apply-coupon" method="POST" class="hidden">
+        <input type="hidden" name="<?= CSRF_TOKEN_KEY ?>" value="<?= csrf_token() ?>">
+        <input type="hidden" name="coupon_code" id="hiddenCouponCode">
+        <input type="hidden" name="redirect_to" value="/checkout">
+    </form>
+
+    <script>
+    function applyCheckoutCoupon() {
+        const val = document.getElementById('checkoutCouponInput').value.trim();
+        if (!val) {
+            alert('Please enter a coupon code.');
+            return;
+        }
+        document.getElementById('hiddenCouponCode').value = val;
+        document.getElementById('applyCheckoutCouponForm').submit();
+    }
+    </script>
 
 </div>
 
